@@ -1,2 +1,2 @@
-{'Total': 14, 'TotalBags': 14, 'TotalCorrect': 7, 'Accuracy': 42.857142857142854}
-[{'name': 'jake', 'TotalBags': 8, 'TotalCorrect': 3, 'Accuracy': 37.5}, {'name': 'bob', 'TotalBags': 1, 'TotalCorrect': 1, 'Accuracy': 100}]
+{'Total': 42, 'TotalBags': 42, 'TotalCorrect': 9, 'Accuracy': 21.428571428571427}
+[{'name': 'jake', 'TotalBags': 34, 'TotalCorrect': 4, 'Accuracy': 11.76}]
