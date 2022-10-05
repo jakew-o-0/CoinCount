@@ -1,3 +1,4 @@
+from cgitb import text
 import tkinter
 import tkinter.ttk
 
@@ -22,10 +23,10 @@ class Logic:
 
         try:
             if(int(coinWeight) == targetWeight):
-                self.update_Totals(True, name)
+                self.update_Totals(True, name, coinType)
                 return "Correct Bag"
             else:
-                self.update_Totals(False, name)
+                self.update_Totals(False, name, coinType)
                 return "Incorect Bag. {}".format(self.how_many_out(coinWeight, coinType))
 
         ########: input sanitation thangs        
@@ -40,15 +41,15 @@ class Logic:
     ########: the second line, a list of dictionarys for each volenteer entered
     ########: the two lines are each assigned to a variable to be eddited and writen back into the text file
     ########: this specific func updates the totals dict  ===> {'Total': int, 'TotalBags': int, 'TotalCorrect': int, 'Accuracy': int}
-    def update_Totals(self, correct, name):
+    def update_Totals(self, correct, name, coinType):
         with open("CoinCount.txt", 'r') as coinCount:
             total = eval(coinCount.readline())
             volenteers = eval(coinCount.readline())
 
         ########: updates the total dict incrementing each item -if needed
-        total["Total"] += 1
+        total["Total"] += self.bagValue[coinType]
         total["TotalBags"] += 1
-        total["Accuracy"] = round((total["TotalCorrect"] / total["TotalBags"]) * 100, 2)
+        total["Accuracy"] = round((total["TotalCorrect"] / total["TotalBags"]) * 100)
         if(correct):
             total["TotalCorrect"] +=1
 
@@ -98,6 +99,25 @@ class Logic:
 
 
 
+    ########: makes a list of sorted accuracys from the volenteer list of dicts
+    ########: using the sorted list it searches through the volenteer list to find the dict with a matching accuracy
+    ########: if found, the dict will be apended to a new list that will be ordered
+    def order_by_accuracy(self, volenteer):
+        accuracys = []
+        for i in range(len(volenteer)):
+            accuracys.append(volenteer[i]["Accuracy"])
+        
+        accuracys.sort(reverse=True)
+        newDict = []
+        for i in range(len(accuracys)):
+            for j in range(len(volenteer)):
+                if(accuracys[i] == volenteer[j]["Accuracy"]):
+                    newDict.append(volenteer[j])
+        
+        return newDict
+
+
+
         
 
 
@@ -108,6 +128,15 @@ class Help_Page(tkinter.Frame):
     def __init__(self, root):
         tkinter.Frame.__init__(self, root)
 
+        info ="""
+ - input the volenteers name, the weight of the coin bag and the
+    type of coin in the bag
+ - only use one type of coin per bag
+ - dont delete the CoinCount.txt file"""
+
+        infoLabel = tkinter.Text(self, width=70, height=5)
+        infoLabel.insert(tkinter.END,info)
+        infoLabel.pack()
 
 
 
@@ -127,6 +156,25 @@ class TotalBags_Page(tkinter.Frame):
         totalBagsLabel.grid(column=1, row=0)
         acccuracyLabel.grid(column=2, row=0)
 
+        self.make_table()
+    
+    def make_table(self):
+        with open("./CoinCount.txt") as coin:
+            coin.readline()
+            volenteers = eval(coin.readline())
+
+        logic = Logic()
+        newVolenteer = logic.order_by_accuracy(volenteer=volenteers)
+        
+        for i in range(len(volenteers)):
+            name = tkinter.Label(self, text=newVolenteer[i]["name"])
+            totalBags = tkinter.Label(self, text=newVolenteer[i]["TotalBags"])
+            accuracy = tkinter.Label(self, text=newVolenteer[i]["Accuracy"])
+
+            name.grid(column=0, row=i + 1)
+            totalBags.grid(column=1, row=i + 1)
+            accuracy.grid(column=2, row=i + 1)
+
 
 
 
@@ -138,9 +186,12 @@ class Total_Page(tkinter.Frame):
     def __init__(self, root):
         tkinter.Frame.__init__(self, root)
 
+        with open("./CoinCount.txt", 'r') as coin:
+            total = eval(coin.readline())
+
         totalFrame = tkinter.Frame(self, padx=10, pady=10)
-        totalMoneyLabel = tkinter.Label(totalFrame, text="TotalMoney: ")
-        totalBagsLabel = tkinter.Label(totalFrame, text="TotalBags: ")
+        totalMoneyLabel = tkinter.Label(totalFrame, text="TotalMoney: {}".format(total["Total"]))
+        totalBagsLabel = tkinter.Label(totalFrame, text="TotalBags: {}".format(total["TotalBags"]))
 
         totalFrame.grid(column=0, row=0)
         totalMoneyLabel.grid(column=0, row=0)
@@ -148,8 +199,8 @@ class Total_Page(tkinter.Frame):
 
 
         bagsFrame = tkinter.Frame(self, padx=10, pady= 10)
-        bagsCorrect = tkinter.Label(bagsFrame, text="Correct bags: ")
-        bagsAccuracy = tkinter.Label(bagsFrame, text="Accuracy: ")
+        bagsCorrect = tkinter.Label(bagsFrame, text="Correct bags: {}".format(total["TotalCorrect"]))
+        bagsAccuracy = tkinter.Label(bagsFrame, text="Accuracy: {}".format(total["Accuracy"]))
 
         bagsFrame.grid(column=1, row=0)
         bagsCorrect.grid(column=0, row=0)
